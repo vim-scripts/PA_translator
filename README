@@ -1,0 +1,5 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=2609
+
+   So, you are working with any document in foreign language and some word is unknown to you. In normal mode, put cursor on this word and press ,tr (in previous versions: <A-Space>) buttons. The translation of the word will appear in command screan. If word can not be translated you will receive message: 'The `your_word` can not be translated'.
+   To translate range of the words (sentences), go to visual mode by pressing <Esc>,<v> buttons. Select desired text, for instance, by <Shift-V>, and after that press ,tr (in previous versions: <A-Space>).
+
