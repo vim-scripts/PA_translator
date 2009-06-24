@@ -1,7 +1,7 @@
 *PA_translator.txt*           Translator plugin
 
 Translator plugin                                              *PA_translator*
-                                Version 0.0.1
+                                Version 0.0.2
 
 Plugin for easily translating single word or multiline sentences without leaving
 your VIM |:PA_translator|.
@@ -41,6 +41,7 @@ To install:
        let g:PA_translator_to_lang = 'your_to_language_code'
 <
     Language codes are google translator API language codes.
+    DON'T FORGET SET YOUR LANGUAGE ENCODINGS.
     Also see:|PA_translator-customization|
 
 ==============================================================================
@@ -48,9 +49,9 @@ USAGE                                                    *PA_translator-usage*
 
  So, you are working with any document in foreign language and some word is 
 unknown to you. In normal mode, put cursor on this word and press <A-Space>
-buttons. The translation of the word will appear in command screan. If word
+buttons. The translation of the word will appear in command screen. If word
 can not be translated you will receive message: 'The `your_word` can not be
-translated'.
+translated by `translate.google.com`'.
  To translate range of the words (sentences), go to visual mode by pressing
 <Esc>,<v> buttons. Select desired text, for instance, by <Shift-V> and
 after that press <A-Space>.
@@ -58,14 +59,16 @@ after that press <A-Space>.
 ===============================================================================
 CUSTOMIZATION                                     *PA_translator-customization*
 
+The following options can be changed in your .vimrc file.
+
                                           *g:PA_translator_printed_in_encoding*
-To control encoding of translation printed in command screan, use: >
+To control encoding of translation printed in command screen, use: >
   let g:PA_translator_printed_in_encoding = &encoding  " default: VIM encoding
   let g:PA_translator_printed_in_encoding = 'cp1251'   " some custom value
 <
                                          *g:PA_translator_received_in_encoding*
 To control encoding of translation received from google translate service, use: >
-  let g:PA_translator_received_in_encoding = 'koi8-r'  " default value
+  let g:PA_translator_received_in_encoding = 'cp1215'  " default value
 
 <                                                   *g:PA_translator_from_lang*
 To control foreign language, use: >
@@ -79,6 +82,7 @@ To control expected (your native) language, use: >
 CHANGE LOG                                            *PA_translator-changelog*
 
 0.0.1  - Initial release.
+0.0.2  - Bug fixing.
 
 ===============================================================================
 TODO                                                       *PA_translator-todo*
