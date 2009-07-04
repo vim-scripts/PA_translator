@@ -1,7 +1,7 @@
 *PA_translator.txt*           Translator plugin
 
 Translator plugin                                              *PA_translator*
-                                Version 0.0.2
+                                Version 0.0.3
 
 Plugin for easily translating single word or multiline sentences without leaving
 your VIM |:PA_translator|.
@@ -48,13 +48,13 @@ To install:
 USAGE                                                    *PA_translator-usage*
 
  So, you are working with any document in foreign language and some word is 
-unknown to you. In normal mode, put cursor on this word and press <A-Space>
-buttons. The translation of the word will appear in command screen. If word
-can not be translated you will receive message: 'The `your_word` can not be
-translated by `translate.google.com`'.
+unknown to you. In normal mode, put cursor on this word and press ,tr (in
+previous versions: <A-Space>) buttons. The translation of the word will
+appear in command screen. If word can not be translated you will receive
+message: 'The `your_word` can not be translated by `translate.google.com`'.
  To translate range of the words (sentences), go to visual mode by pressing
 <Esc>,<v> buttons. Select desired text, for instance, by <Shift-V> and
-after that press <A-Space>.
+after that press ,tr (in previous versions: <A-Space>).
 
 ===============================================================================
 CUSTOMIZATION                                     *PA_translator-customization*
@@ -81,8 +81,12 @@ To control expected (your native) language, use: >
 ===============================================================================
 CHANGE LOG                                            *PA_translator-changelog*
 
-0.0.1  - Initial release.
-0.0.2  - Bug fixing.
+0.0.3  - Bug fixing: 1. IP host resolving fixed for linux/freebsd OS;
+                     2. `^M` unix/windows bug fixed;
+                     3. Default maps changed from <A-Space> to ,tr because many
+                        OS reserve such shortcuts;
+0.0.2  - Bug fixing: updated IP host resolving;
+0.0.1  - Initial release;
 
 ===============================================================================
 TODO                                                       *PA_translator-todo*

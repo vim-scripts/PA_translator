@@ -1,12 +1,12 @@
 " Vim global plugin for translating unknown words, sentences
-" Last Change:	2009 June 23
+" Last Change:	2009 July 04
 " Maintainer:	Pukalskyy Andrij <andrijpu@gmail.com>
 
 " ensure that plugin is loaded just one time
 if exists("g:PA_translator_version")
     finish
 endif
-let g:PA_translator_version = "0.0.2"
+let g:PA_translator_version = "0.0.3"
 
 " check for Vim version 700 or greater
 if v:version < 700
@@ -49,9 +49,16 @@ ruby<<EOF
         def initialize
             # we cann't request site by hostname, vim does not allow it, only by IP.
             # also we cann't IPSocket.getaddress, vim does not allow it too.
-            # so, let's make a little hack :)
-            `nslookup translate.google.com`.match /Addresses:\s+(.*)\n/
-            @ip = $1.split(', ')[0]
+            # so, let's make a little hack and fetch it by `nslookup` command :)
+
+            if RUBY_PLATFORM.downcase.include?("mswin")
+                `nslookup translate.google.com`.match /Addresses:\s+(.*)\n/
+                @ip = $1.split(', ')[0]
+            else
+                # `linux` and `freebsd` have a little bit different `nslookup` result format
+                `nslookup translate.google.com`.match /Non-authoritative answer:.*?Address:\s+(.*?)$/m
+                @ip = $1
+            end
 
             # encoding convertor
             @encode_conv = Iconv.new(VIM::evaluate("g:PA_translator_printed_in_encoding"), VIM::evaluate("g:PA_translator_received_in_encoding"))
@@ -104,11 +111,12 @@ endfunction
 
 :call PA_init_translator()
 
+let mapleader = ','
 if !hasmapto('<Esc>:call<Space>PA_translate_word()<CR>')
-    nnoremap <A-Space> <Esc>:call<Space>PA_translate_word()<CR>|        " it translates 1 word in NORMAL mode
+    nnoremap <Leader>tr <Esc>:call<Space>PA_translate_word()<CR>|        " it translates 1 word in NORMAL mode
 endif
 if !hasmapto('Y<Esc>:call<Space>PA_translate_sentence()<CR>')
-    vnoremap <A-Space> Y<Esc>:call<Space>PA_translate_sentence()<CR>|   " it translates sentence selected or under cursor line in VISUAL mode
+    vnoremap <Leader>tr Y<Esc>:call<Space>PA_translate_sentence()<CR>|   " it translates sentence selected or under cursor line in VISUAL mode
 endif
 
 
