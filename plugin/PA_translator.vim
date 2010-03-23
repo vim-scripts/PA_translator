@@ -1,12 +1,12 @@
 " Vim global plugin for translating unknown words, sentences
-" Last Change:	2009 July 04
+" Last Change:	2010 January 20
 " Maintainer:	Pukalskyy Andrij <andrijpu@gmail.com>
 
 " ensure that plugin is loaded just one time
 if exists("g:PA_translator_version")
     finish
 endif
-let g:PA_translator_version = "0.0.3"
+let g:PA_translator_version = "0.0.4"
 
 " check for Vim version 700 or greater
 if v:version < 700
@@ -39,77 +39,67 @@ if !exists("g:PA_translator_to_lang")
 endif
 
 " should be initialized before 1-st translating actions
-function! PA_init_translator()
+function! PA_translator_init()
 ruby<<EOF
-    require 'net/http'
     require 'cgi'
     require 'iconv'
 
-    class PA_translator
-        def initialize
-            # we cann't request site by hostname, vim does not allow it, only by IP.
-            # also we cann't IPSocket.getaddress, vim does not allow it too.
-            # so, let's make a little hack and fetch it by `nslookup` command :)
+    def PA_translate_by_google(word_or_sentence)
+        VIM::message("Wait while translating is performing...")
 
-            if RUBY_PLATFORM.downcase.include?("mswin")
-                `nslookup translate.google.com`.match /Addresses:\s+(.*)\n/
-                @ip = $1.split(', ')[0]
-            else
-                # `linux` and `freebsd` have a little bit different `nslookup` result format
-                `nslookup translate.google.com`.match /Non-authoritative answer:.*?Address:\s+(.*?)$/m
-                @ip = $1
-            end
+        # ruby-vim does not allow to HTTP-get by host name. Just by IP.
+        # On the other hand translate.google.com ignore IPs.
+        # This hack resolve this problem.
+        host = "translate.google.com"
+        path = "/translate_a/t?client=t&text=%s&sl=%s&tl=%s&otf=2&pc=0"% [CGI.escape(word_or_sentence.strip),
+                                                                          VIM::evaluate('g:PA_translator_from_lang'),
+                                                                          VIM::evaluate('g:PA_translator_to_lang') ]
+        cmd = "require 'net/http'; p Net::HTTP.get('%s', '%s')"% [host, path]
+        begin
+            response = `ruby -e "#{cmd}"`
+        rescue
+            VIM::message("It seems you should connect to internet!!!")
+        else
+            # porting JSON to hash without including additional JSON library
+            response_as_arr = eval(eval(response.gsub('":\"', '"=>\"')).gsub('":[', '"=>[').gsub('":{', '"=>{'))
+
+            VIM::message("Translated.")
+            VIM::message('='*40)
 
             # encoding convertor
-            @encode_conv = Iconv.new(VIM::evaluate("g:PA_translator_printed_in_encoding"), VIM::evaluate("g:PA_translator_received_in_encoding"))
-        end
+            encode_conv = Iconv.new(VIM::evaluate("g:PA_translator_printed_in_encoding"), VIM::evaluate("g:PA_translator_received_in_encoding"))
 
-        def translate_word(word)
-            response = eval(Net::HTTP.get(@ip, "/translate_a/t?client=t&" <<
-                                                "sl=#{VIM::evaluate('g:PA_translator_from_lang')}&" <<
-                                                "tl=#{VIM::evaluate('g:PA_translator_to_lang')}&" <<
-                                                "text=#{CGI.escape(word)}"))
-            unless response.class == Array
-                VIM::message("The `#{word}` can not be translated by `translate.google.com`")
-            else
-                VIM::message(@encode_conv.iconv(response[0]))
-                VIM::message("=" * 50)
-                response[1].each do |word_by_gender|
-                    VIM::message(@encode_conv.iconv(word_by_gender[0]))
-                    word_by_gender[1, word_by_gender.size].uniq.each {|word| VIM::message("    #{@encode_conv.iconv(word)}")}
-                end
+            # print translation
+            response_as_arr["sentences"].each do |sentence|
+                VIM::message(encode_conv.iconv(sentence["trans"]))
             end
-        end
 
-        def translate_sentence(sentence)
-            response = eval(Net::HTTP.get(@ip, "/translate_a/t?client=t&" <<
-                                                "sl=#{VIM::evaluate('g:PA_translator_from_lang')}&" <<
-                                                "tl=#{VIM::evaluate('g:PA_translator_to_lang')}&" <<
-                                                "text=#{CGI.escape(sentence)}"))
-            VIM::message(@encode_conv.iconv(response))
+            # print gender cases
+            response_as_arr["dict"].each do |gender|
+                VIM::message(encode_conv.iconv(gender["pos"]))
+                gender["terms"].each { |term| VIM::message("    %s"% [encode_conv.iconv(term), ]) }
+            end if response_as_arr.has_key? "dict"
         end
     end
-
-    pa_translator = PA_translator.new
 EOF
 endfunction
 
 " translate just 1 word under cursor in normal mode
 function! PA_translate_word()
 ruby<<EOF
-    pa_translator.translate_word(VIM::evaluate("expand('<cword>')"))
+    PA_translate_by_google(VIM::evaluate("expand('<cword>')"))
 EOF
 endfunction
 
 " translate selected sentence in visual mode
 function! PA_translate_sentence()
 ruby<<EOF
-    pa_translator.translate_sentence(VIM::evaluate("substitute(@0, '\n', '', 'g')"))
+    PA_translate_by_google(VIM::evaluate("substitute(@0, '\n', '', 'g')"))
 EOF
 endfunction
 
 
-:call PA_init_translator()
+:call PA_translator_init()
 
 let mapleader = ','
 if !hasmapto('<Esc>:call<Space>PA_translate_word()<CR>')
